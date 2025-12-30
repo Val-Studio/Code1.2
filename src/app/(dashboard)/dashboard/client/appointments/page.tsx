@@ -83,7 +83,7 @@ export default async function ClientAppointmentsPage() {
           </Card>
         ) : (
           <div className="space-y-4">
-            {upcoming.map((appointment) => (
+            {upcoming.map((appointment: any) => (
               <Card key={appointment.id}>
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
@@ -156,7 +156,7 @@ export default async function ClientAppointmentsPage() {
           <p className="text-gray-500">История пуста</p>
         ) : (
           <div className="space-y-3">
-            {past.map((appointment) => (
+            {past.map((appointment: any) => (
               <Card key={appointment.id}>
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">

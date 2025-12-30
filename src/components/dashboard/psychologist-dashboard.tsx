@@ -152,7 +152,7 @@ export async function PsychologistDashboard({ userId }: PsychologistDashboardPro
               <p className="text-center text-gray-500 py-8">На сегодня записей нет</p>
             ) : (
               <div className="space-y-4">
-                {stats.todayAppointments.map((appointment) => (
+                {stats.todayAppointments.map((appointment: any) => (
                   <div
                     key={appointment.id}
                     className="flex items-center justify-between rounded-lg border p-4"
@@ -205,7 +205,7 @@ export async function PsychologistDashboard({ userId }: PsychologistDashboardPro
               <p className="text-center text-gray-500 py-8">Нет предстоящих записей</p>
             ) : (
               <div className="space-y-3">
-                {stats.upcomingAppointments.map((appointment) => (
+                {stats.upcomingAppointments.map((appointment: any) => (
                   <div
                     key={appointment.id}
                     className="flex items-center justify-between rounded-lg border p-3"
@@ -256,7 +256,7 @@ export async function PsychologistDashboard({ userId }: PsychologistDashboardPro
             <p className="text-center text-gray-500 py-8">Пока нет отзывов</p>
           ) : (
             <div className="space-y-4">
-              {stats.recentReviews.map((review) => (
+              {stats.recentReviews.map((review: any) => (
                 <div key={review.id} className="rounded-lg border p-4">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">

@@ -3,7 +3,8 @@
 import { useEffect, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { LiveKitRoom, VideoConference, RoomAudioRenderer } from '@livekit/components-react';
-import '@livekit/components-styles';
+// LiveKit styles - will be loaded if package is installed
+// import '@livekit/components-styles';
 import { Button, PageLoader, Card, CardContent } from '@/components/ui';
 import { PhoneOff, AlertCircle } from 'lucide-react';
 

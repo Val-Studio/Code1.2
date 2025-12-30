@@ -4,7 +4,7 @@ import { PrismaAdapter } from '@auth/prisma-adapter';
 import bcrypt from 'bcryptjs';
 import prisma from '@/lib/prisma';
 import { loginSchema } from '@/lib/validations';
-import type { Role } from '@prisma/client';
+import type { Role } from '@/types';
 
 declare module 'next-auth' {
   interface User {
@@ -34,7 +34,7 @@ declare module '@auth/core/jwt' {
 }
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  adapter: PrismaAdapter(prisma),
+  adapter: PrismaAdapter(prisma) as any,
   session: {
     strategy: 'jwt',
     maxAge: 30 * 24 * 60 * 60, // 30 days
@@ -95,10 +95,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return token;
     },
     async session({ session, token }) {
-      session.user.id = token.id;
-      session.user.role = token.role;
-      session.user.firstName = token.firstName;
-      session.user.lastName = token.lastName;
+      session.user.id = token.id as string;
+      session.user.role = token.role as Role;
+      session.user.firstName = token.firstName as string | undefined;
+      session.user.lastName = token.lastName as string | undefined;
       return session;
     },
     async redirect({ url, baseUrl }) {

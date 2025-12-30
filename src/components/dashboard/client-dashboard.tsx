@@ -175,7 +175,7 @@ export async function ClientDashboard({ userId }: ClientDashboardProps) {
               </div>
             ) : (
               <div className="space-y-3">
-                {data.upcomingAppointments.map((appointment) => (
+                {data.upcomingAppointments.map((appointment: any) => (
                   <div
                     key={appointment.id}
                     className="flex items-center justify-between rounded-lg border p-4"
@@ -218,7 +218,7 @@ export async function ClientDashboard({ userId }: ClientDashboardProps) {
               <p className="py-8 text-center text-gray-500">История пуста</p>
             ) : (
               <div className="space-y-3">
-                {data.pastAppointments.map((appointment) => (
+                {data.pastAppointments.map((appointment: any) => (
                   <div
                     key={appointment.id}
                     className="flex items-center justify-between rounded-lg border p-4"

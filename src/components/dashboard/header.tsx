@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { signOut } from 'next-auth/react';
 import { Avatar, Button } from '@/components/ui';
 import { Bell, Menu, LogOut, Settings, User } from 'lucide-react';
-import type { Role } from '@prisma/client';
+import type { Role } from '@/types';
 
 interface HeaderProps {
   user: {

@@ -106,7 +106,7 @@ export default async function PsychologistAppointmentsPage({
             </div>
           ) : (
             <div className="divide-y">
-              {appointments.map((appointment) => (
+              {appointments.map((appointment: any) => (
                 <div
                   key={appointment.id}
                   className="flex items-center justify-between p-4 hover:bg-gray-50"

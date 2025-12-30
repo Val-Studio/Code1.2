@@ -25,7 +25,7 @@ async function getConversations(userId: string) {
   });
 
   // Get participant details
-  const participantIds = conversations.flatMap((c) =>
+  const participantIds = conversations.flatMap((c: any) =>
     c.participant1Id === userId ? [c.participant2Id] : [c.participant1Id]
   );
 
@@ -34,9 +34,9 @@ async function getConversations(userId: string) {
     include: { profile: true },
   });
 
-  const participantMap = new Map(participants.map((p) => [p.id, p]));
+  const participantMap = new Map(participants.map((p: any) => [p.id, p]));
 
-  return conversations.map((conv) => ({
+  return conversations.map((conv: any) => ({
     ...conv,
     participant: participantMap.get(
       conv.participant1Id === userId ? conv.participant2Id : conv.participant1Id
@@ -70,7 +70,7 @@ export default async function MessagesPage() {
             </div>
           ) : (
             <div className="divide-y">
-              {conversations.map((conv) => (
+              {conversations.map((conv: any) => (
                 <Link
                   key={conv.id}
                   href={`/dashboard/messages/${conv.participant?.id}`}

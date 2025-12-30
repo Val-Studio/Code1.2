@@ -1,4 +1,161 @@
-import type { User, Profile, Appointment, Payment, Review, Message } from '@prisma/client';
+// Базовые типы (будут заменены на Prisma типы после prisma generate)
+
+export type Role = 'ADMIN' | 'PSYCHOLOGIST' | 'CLIENT';
+
+export type AppointmentStatus =
+  | 'PENDING'
+  | 'CONFIRMED'
+  | 'IN_PROGRESS'
+  | 'COMPLETED'
+  | 'CANCELLED'
+  | 'NO_SHOW';
+
+export type AppointmentType = 'VIDEO' | 'AUDIO' | 'CHAT';
+
+export type PaymentStatus =
+  | 'PENDING'
+  | 'PROCESSING'
+  | 'COMPLETED'
+  | 'FAILED'
+  | 'REFUNDED'
+  | 'PARTIALLY_REFUNDED';
+
+export type NotificationType =
+  | 'APPOINTMENT_CREATED'
+  | 'APPOINTMENT_CONFIRMED'
+  | 'APPOINTMENT_CANCELLED'
+  | 'APPOINTMENT_REMINDER'
+  | 'PAYMENT_RECEIVED'
+  | 'PAYOUT_COMPLETED'
+  | 'NEW_MESSAGE'
+  | 'NEW_REVIEW'
+  | 'SYSTEM';
+
+export interface User {
+  id: string;
+  email: string;
+  emailVerified?: Date | null;
+  password?: string | null;
+  role: Role;
+  createdAt: Date;
+  updatedAt: Date;
+  profile?: Profile | null;
+}
+
+export interface Profile {
+  id: string;
+  userId: string;
+  firstName: string;
+  lastName: string;
+  phone?: string | null;
+  avatar?: string | null;
+  timezone: string;
+  bio?: string | null;
+  specializations: string[];
+  education?: unknown;
+  certificates?: unknown;
+  experience?: number | null;
+  price?: number | null;
+  languages: string[];
+  verified: boolean;
+  rating?: number | null;
+  reviewsCount: number;
+  isActive: boolean;
+  isOnline: boolean;
+  lastOnline?: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface Appointment {
+  id: string;
+  psychologistId: string;
+  clientId: string;
+  datetime: Date;
+  duration: number;
+  status: AppointmentStatus;
+  type: AppointmentType;
+  price: number;
+  notes?: string | null;
+  privateNotes?: string | null;
+  roomId?: string | null;
+  cancelledAt?: Date | null;
+  cancelledBy?: string | null;
+  cancelReason?: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface Payment {
+  id: string;
+  appointmentId: string;
+  amount: number;
+  currency: string;
+  status: PaymentStatus;
+  stripePaymentIntentId?: string | null;
+  stripeChargeId?: string | null;
+  refundedAt?: Date | null;
+  refundAmount?: number | null;
+  refundReason?: string | null;
+  payoutAmount?: number | null;
+  paidOutAt?: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface Message {
+  id: string;
+  conversationId: string;
+  senderId: string;
+  receiverId: string;
+  content: string;
+  type: 'TEXT' | 'IMAGE' | 'FILE' | 'SYSTEM';
+  attachmentUrl?: string | null;
+  readAt?: Date | null;
+  createdAt: Date;
+}
+
+export interface Review {
+  id: string;
+  psychologistId: string;
+  clientId: string;
+  appointmentId: string;
+  rating: number;
+  comment?: string | null;
+  isPublic: boolean;
+  isApproved: boolean;
+  moderatedAt?: Date | null;
+  createdAt: Date;
+}
+
+export interface Notification {
+  id: string;
+  userId: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  link?: string | null;
+  data?: unknown;
+  readAt?: Date | null;
+  createdAt: Date;
+}
+
+export interface Schedule {
+  id: string;
+  psychologistId: string;
+  dayOfWeek: number;
+  startTime: string;
+  endTime: string;
+  isAvailable: boolean;
+}
+
+export interface Conversation {
+  id: string;
+  participant1Id: string;
+  participant2Id: string;
+  lastMessageAt?: Date | null;
+  createdAt: Date;
+}
 
 // Расширенные типы с связями
 
@@ -107,6 +264,7 @@ export interface CertificateItem {
 // Schedule types
 
 export interface ScheduleSlot {
+  id?: string;
   dayOfWeek: number;
   startTime: string;
   endTime: string;

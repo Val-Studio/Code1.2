@@ -143,7 +143,7 @@ export default async function PsychologistsPage({
         </Card>
       ) : (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {psychologists.map((psy) => (
+          {psychologists.map((psy: any) => (
             <PsychologistCard key={psy.id} psychologist={psy} />
           ))}
         </div>

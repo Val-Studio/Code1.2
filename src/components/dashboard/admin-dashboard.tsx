@@ -130,7 +130,7 @@ export async function AdminDashboard() {
                 </tr>
               </thead>
               <tbody className="divide-y">
-                {stats.recentUsers.map((user) => (
+                {stats.recentUsers.map((user: any) => (
                   <tr key={user.id}>
                     <td className="py-3">
                       {user.profile?.firstName} {user.profile?.lastName || '-'}

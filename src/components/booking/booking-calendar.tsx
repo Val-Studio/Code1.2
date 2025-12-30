@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 import { Button, Badge } from '@/components/ui';
 import { formatPrice } from '@/lib/utils';
 import { ChevronLeft, ChevronRight, Clock, CreditCard } from 'lucide-react';
-import type { Schedule } from '@prisma/client';
+import type { Schedule } from '@/types';
 
 interface BookingCalendarProps {
   psychologistId: string;

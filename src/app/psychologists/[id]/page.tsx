@@ -110,7 +110,7 @@ export default async function PsychologistPage({ params }: PageProps) {
 
               {profile.specializations && profile.specializations.length > 0 && (
                 <div className="mt-4 flex flex-wrap gap-2">
-                  {profile.specializations.map((spec) => (
+                  {profile.specializations.map((spec: string) => (
                     <Badge key={spec}>{spec}</Badge>
                   ))}
                 </div>
@@ -225,7 +225,7 @@ export default async function PsychologistPage({ params }: PageProps) {
                   <p className="text-gray-500 py-4 text-center">Пока нет отзывов</p>
                 ) : (
                   <div className="space-y-4">
-                    {psychologist.psychologistReviews.map((review) => (
+                    {psychologist.psychologistReviews.map((review: any) => (
                       <div key={review.id} className="border-b pb-4 last:border-0">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">

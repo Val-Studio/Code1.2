@@ -72,18 +72,17 @@ export default async function NotificationsPage() {
             </div>
           ) : (
             <div className="divide-y">
-              {notifications.map((notification) => {
-                const Wrapper = notification.link ? Link : 'div';
-                const wrapperProps = notification.link ? { href: notification.link } : {};
-
-                return (
-                  <Wrapper
-                    key={notification.id}
-                    {...wrapperProps}
-                    className={`flex items-start gap-4 p-4 transition-colors ${
-                      notification.link ? 'hover:bg-gray-50' : ''
-                    } ${!notification.readAt ? 'bg-blue-50' : ''}`}
-                  >
+              {notifications.map((notification: {
+                id: string;
+                type: string;
+                title: string;
+                message: string;
+                link: string | null;
+                readAt: Date | null;
+                createdAt: Date;
+              }) => {
+                const content = (
+                  <>
                     <div className="flex-shrink-0">
                       {notificationIcons[notification.type] || <Bell className="h-5 w-5" />}
                     </div>
@@ -103,7 +102,21 @@ export default async function NotificationsPage() {
                         {formatDateTime(notification.createdAt)}
                       </p>
                     </div>
-                  </Wrapper>
+                  </>
+                );
+
+                const className = `flex items-start gap-4 p-4 transition-colors ${
+                  notification.link ? 'hover:bg-gray-50' : ''
+                } ${!notification.readAt ? 'bg-blue-50' : ''}`;
+
+                return notification.link ? (
+                  <Link key={notification.id} href={notification.link} className={className}>
+                    {content}
+                  </Link>
+                ) : (
+                  <div key={notification.id} className={className}>
+                    {content}
+                  </div>
                 );
               })}
             </div>
