@@ -1,0 +1,368 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==================== ПОЛЬЗОВАТЕЛИ ====================
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  emailVerified DateTime?
+  password      String?
+  role          Role      @default(CLIENT)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Связи
+  profile               Profile?
+  accounts              Account[]
+  sessions              Session[]
+
+  // Для психологов
+  psychologistAppointments Appointment[] @relation("PsychologistAppointments")
+  psychologistSchedules    Schedule[]
+  psychologistNotes        ClientNote[]  @relation("PsychologistNotes")
+  psychologistReviews      Review[]      @relation("PsychologistReviews")
+
+  // Для клиентов
+  clientAppointments    Appointment[] @relation("ClientAppointments")
+  clientNotes           ClientNote[]  @relation("ClientNotes")
+  clientReviews         Review[]      @relation("ClientReviews")
+
+  // Сообщения
+  sentMessages          Message[]     @relation("SentMessages")
+  receivedMessages      Message[]     @relation("ReceivedMessages")
+
+  // Уведомления
+  notifications         Notification[]
+}
+
+enum Role {
+  ADMIN
+  PSYCHOLOGIST
+  CLIENT
+}
+
+// ==================== ПРОФИЛИ ====================
+
+model Profile {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  firstName String
+  lastName  String
+  phone     String?
+  avatar    String?
+  timezone  String   @default("Europe/Moscow")
+
+  // Для психологов
+  bio             String?   @db.Text
+  specializations String[]  // ["Тревожность", "Депрессия", "Отношения"]
+  education       Json?     // [{degree, institution, year}]
+  certificates    Json?     // [{name, issuer, year, url}]
+  experience      Int?      // Лет опыта
+  price           Int?      // Цена за 60 мин (в копейках)
+  languages       String[]  @default(["ru"])
+  verified        Boolean   @default(false)
+  rating          Float?
+  reviewsCount    Int       @default(0)
+
+  // Статус
+  isActive        Boolean   @default(true)
+  isOnline        Boolean   @default(false)
+  lastOnline      DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ==================== АУТЕНТИФИКАЦИЯ (NextAuth) ====================
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ==================== ЗАПИСИ НА ПРИЁМ ====================
+
+model Appointment {
+  id             String            @id @default(cuid())
+  psychologistId String
+  clientId       String
+
+  datetime       DateTime
+  duration       Int               @default(60) // минуты
+  status         AppointmentStatus @default(PENDING)
+  type           AppointmentType   @default(VIDEO)
+  price          Int               // в копейках
+
+  // Данные сессии
+  notes          String?           @db.Text  // Заметки для клиента
+  privateNotes   String?           @db.Text  // Приватные заметки психолога
+  roomId         String?           // ID видео-комнаты
+
+  // Отмена
+  cancelledAt    DateTime?
+  cancelledBy    String?
+  cancelReason   String?
+
+  psychologist   User              @relation("PsychologistAppointments", fields: [psychologistId], references: [id])
+  client         User              @relation("ClientAppointments", fields: [clientId], references: [id])
+  payment        Payment?
+  review         Review?
+
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  @@index([psychologistId])
+  @@index([clientId])
+  @@index([datetime])
+}
+
+enum AppointmentStatus {
+  PENDING      // Ожидает подтверждения
+  CONFIRMED    // Подтверждено
+  IN_PROGRESS  // Идёт сейчас
+  COMPLETED    // Завершено
+  CANCELLED    // Отменено
+  NO_SHOW      // Клиент не пришёл
+}
+
+enum AppointmentType {
+  VIDEO
+  AUDIO
+  CHAT
+}
+
+// ==================== РАСПИСАНИЕ ====================
+
+model Schedule {
+  id             String  @id @default(cuid())
+  psychologistId String
+  psychologist   User    @relation(fields: [psychologistId], references: [id], onDelete: Cascade)
+
+  dayOfWeek      Int     // 0 = Воскресенье, 1 = Понедельник, ..., 6 = Суббота
+  startTime      String  // "09:00"
+  endTime        String  // "18:00"
+  isAvailable    Boolean @default(true)
+
+  @@unique([psychologistId, dayOfWeek])
+  @@index([psychologistId])
+}
+
+// Исключения из расписания (отпуска, выходные)
+model ScheduleException {
+  id             String   @id @default(cuid())
+  psychologistId String
+  date           DateTime @db.Date
+  isAvailable    Boolean  @default(false)
+  reason         String?
+
+  @@unique([psychologistId, date])
+}
+
+// ==================== ПЛАТЕЖИ ====================
+
+model Payment {
+  id            String        @id @default(cuid())
+  appointmentId String        @unique
+  appointment   Appointment   @relation(fields: [appointmentId], references: [id])
+
+  amount        Int           // в копейках
+  currency      String        @default("RUB")
+  status        PaymentStatus @default(PENDING)
+
+  // Stripe
+  stripePaymentIntentId String?
+  stripeChargeId        String?
+
+  // Возврат
+  refundedAt    DateTime?
+  refundAmount  Int?
+  refundReason  String?
+
+  // Выплата психологу
+  payoutAmount  Int?          // Сумма после комиссии
+  payoutStatus  PayoutStatus  @default(PENDING)
+  paidOutAt     DateTime?
+
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([status])
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+enum PayoutStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+// ==================== СООБЩЕНИЯ ====================
+
+model Conversation {
+  id             String    @id @default(cuid())
+  participant1Id String
+  participant2Id String
+
+  lastMessageAt  DateTime?
+  messages       Message[]
+
+  createdAt      DateTime  @default(now())
+
+  @@unique([participant1Id, participant2Id])
+  @@index([participant1Id])
+  @@index([participant2Id])
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  senderId       String
+  sender         User         @relation("SentMessages", fields: [senderId], references: [id])
+  receiverId     String
+  receiver       User         @relation("ReceivedMessages", fields: [receiverId], references: [id])
+
+  content        String       @db.Text
+  type           MessageType  @default(TEXT)
+  attachmentUrl  String?
+
+  readAt         DateTime?
+
+  createdAt      DateTime     @default(now())
+
+  @@index([conversationId])
+  @@index([senderId])
+  @@index([receiverId])
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  FILE
+  SYSTEM
+}
+
+// ==================== ЗАМЕТКИ О КЛИЕНТАХ ====================
+
+model ClientNote {
+  id             String   @id @default(cuid())
+  psychologistId String
+  psychologist   User     @relation("PsychologistNotes", fields: [psychologistId], references: [id], onDelete: Cascade)
+  clientId       String
+  client         User     @relation("ClientNotes", fields: [clientId], references: [id], onDelete: Cascade)
+
+  title          String?
+  content        String   @db.Text
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([psychologistId])
+  @@index([clientId])
+}
+
+// ==================== ОТЗЫВЫ ====================
+
+model Review {
+  id             String      @id @default(cuid())
+  psychologistId String
+  psychologist   User        @relation("PsychologistReviews", fields: [psychologistId], references: [id])
+  clientId       String
+  client         User        @relation("ClientReviews", fields: [clientId], references: [id])
+  appointmentId  String      @unique
+  appointment    Appointment @relation(fields: [appointmentId], references: [id])
+
+  rating         Int         // 1-5
+  comment        String?     @db.Text
+  isPublic       Boolean     @default(true)
+
+  // Модерация
+  isApproved     Boolean     @default(false)
+  moderatedAt    DateTime?
+
+  createdAt      DateTime    @default(now())
+
+  @@index([psychologistId])
+}
+
+// ==================== УВЕДОМЛЕНИЯ ====================
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  type      NotificationType
+  title     String
+  message   String
+  link      String?
+  data      Json?
+
+  readAt    DateTime?
+
+  createdAt DateTime         @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+enum NotificationType {
+  APPOINTMENT_CREATED
+  APPOINTMENT_CONFIRMED
+  APPOINTMENT_CANCELLED
+  APPOINTMENT_REMINDER
+  PAYMENT_RECEIVED
+  PAYOUT_COMPLETED
+  NEW_MESSAGE
+  NEW_REVIEW
+  SYSTEM
+}
